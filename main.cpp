@@ -30,7 +30,7 @@ void printBoard(map<char, vector<char>>  board) {
     }
 }
 
-auto createBoard(){
+auto createBoard(bool print){
     map<char, vector<char>> board;
     vector<char> row = {'*', '*', '*', '*', '*', '*', '*', '*', '*', '*'};
     board.insert(pair<char, vector<char>>('A', row));
@@ -43,7 +43,9 @@ auto createBoard(){
     board.insert(pair<char, vector<char>>('H', row));
     board.insert(pair<char, vector<char>>('I', row));
     board.insert(pair<char, vector<char>>('J', row));
-    printBoard(board);
+    if (print) {
+        printBoard(board);
+    }
     return board;
 }
 
@@ -154,17 +156,88 @@ auto placeBoats(map<char, vector<char>> board) {
     return board;
 }
 
+map<char, vector<char>> bombBoard(map<char, vector<char>> boardToBomb, map<char, vector<char>> displayBoard) {
+    string holder;
+    bool missed = false;
+    while (!missed) {
+        string input;
+        printBoard(displayBoard);
+        cout << "Type the coords you would like to bomb: ";
+        cin >> input;
+        char letter = input[0];
+        int row = charToInt(input[1]);
+        if (displayBoard[letter][row] == 'x' || displayBoard[letter][row] == '-') {
+            cout << "Bomb somewhere else" << endl;
+            continue;
+        }
+        if (boardToBomb[letter][row] == 'X') {
+            displayBoard[letter][row] = 'x';
+        } else {
+            displayBoard[letter][row] = '-';
+            printBoard(displayBoard);
+            cout << "Other players turn press any key: ";
+            cin >> holder;
+            cout << "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n";
+
+            missed = true;
+        }
+    }
+    return displayBoard;
+}
+
+int checkBombs(map<char, vector<char>> board) {
+    int bombs = 0;
+    for (pair<char, vector<char>> p  : board) {
+        for (char i : p.second) {
+            if(i == 'x') {
+                bombs ++;
+            }
+        }
+    }
+    return bombs;
+}
+
     int main() {
         string holder;
-        vector<char> yPositions = {'A', 'B', 'C', 'D', 'E', 'G', 'H', 'I', 'J'};
-        map<char, vector<char>> firstBoard = createBoard();
+        map<char, vector<char>> firstBoard = createBoard(true);
 
         firstBoard = placeBoats(firstBoard);
         cout << "Type any key for the second player to begin: ";
         cin >> holder;
         cout << "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n";
-        map<char, vector<char>> secondBoard = createBoard();
+        map<char, vector<char>> secondBoard = createBoard(true);
         secondBoard = placeBoats(secondBoard);
+
+        cout << "Press any key to begin the game (p1) ";
+        cin >> holder;
+        cout << "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n";
+
+        map<char, vector<char>> firstEnemyBoard = createBoard(false);
+        map<char, vector<char>> secondEnemyBoard = createBoard(false);
+
+        bool gameOver = false;
+        int p = 1;
+        int firstBombs = 0;
+        int secondBombs = 0;
+        while (!gameOver) {
+            // player 1
+            if (p % 2 == 1) {
+                firstEnemyBoard = bombBoard(secondBoard, firstEnemyBoard);
+                firstBombs = checkBombs(firstEnemyBoard);
+                if (firstBombs >= 17) {
+                    cout << "Player 1 wins!";
+                    gameOver = true;
+                }
+            } else {
+                secondEnemyBoard = bombBoard(firstBoard, secondEnemyBoard);
+                secondBombs = checkBombs(secondEnemyBoard);
+                if (secondBombs >= 17) {
+                    cout << "Player 2 wins!";
+                    gameOver = true;
+                }
+            }
+            p++;
+        }
         return 0;
     }
 
